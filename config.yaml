@@ -1,0 +1,4 @@
+port: 443
+logging:
+  level: error
+  path: "log/lzblogs"

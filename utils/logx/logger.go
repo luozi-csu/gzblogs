@@ -1,4 +1,4 @@
-package utils
+package logx
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ const (
 	fatalLevel
 )
 
-var Logger logHelper
+var logger logHelper
 
 type logHelper struct {
 	level   int
@@ -26,48 +26,52 @@ type logHelper struct {
 }
 
 func InitLogger(level int, path string) {
-	Logger.level = level
-	Logger.logPath = path
-	Logger.logTime = time.Now().Unix()
-	Logger.createLogFile()
+	logger.level = level
+	logger.logPath = path
 
-	log.SetOutput(Logger)
+	timeStr := time.Now().Format("2006-01-02")
+	t, _ := time.ParseInLocation("2006-01-02", timeStr, time.Local)
+	logger.logTime = t.Unix()
+
+	logger.createLogFile()
+
+	log.SetOutput(logger)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
-func (logger *logHelper) SetLevel(level int) {
+func SetLevel(level int) {
 	logger.level = level
 }
 
-func (logger logHelper) Debugf(format string, args ...interface{}) {
+func Debugf(format string, args ...interface{}) {
 	if logger.level >= debugLevel {
 		log.SetPrefix("[debug] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger logHelper) Infof(format string, args ...interface{}) {
+func Infof(format string, args ...interface{}) {
 	if logger.level >= infoLevel {
 		log.SetPrefix("[info] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger logHelper) Warnf(format string, args ...interface{}) {
+func Warnf(format string, args ...interface{}) {
 	if logger.level >= warnLevel {
 		log.SetPrefix("[warn] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger logHelper) Errorf(format string, args ...interface{}) {
+func Errorf(format string, args ...interface{}) {
 	if logger.level >= errorLevel {
 		log.SetPrefix("[error] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger logHelper) Fatalf(format string, args ...interface{}) {
+func Fatalf(format string, args ...interface{}) {
 	if logger.level >= fatalLevel {
 		log.SetPrefix("[fatal] ")
 		log.Output(2, fmt.Sprintf(format, args...))

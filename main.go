@@ -2,13 +2,20 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/luozi-csu/lzblogs/config"
+	"github.com/luozi-csu/lzblogs/middleware"
 	"github.com/luozi-csu/lzblogs/utils/logx"
 )
 
 var configFile = flag.String("f", "./config.yaml", "path of the global config file")
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	message := "hello world"
+	w.Write([]byte(message))
+}
 
 func main() {
 	flag.Parse()
@@ -23,11 +30,14 @@ func main() {
 
 	logx.InitLogger(levelMap[logLevel], logPath)
 
-	fmt.Println(config.CONF)
+	router := chi.NewRouter()
+	router.Use(middleware.RequestLogger)
 
-	logx.Debugf("this is a debug level message")
-	logx.Infof("this is a info level message")
-	logx.Warnf("this is a warn level message")
-	logx.Errorf("this is a error level message")
-	logx.Fatalf("this is a fatal level message")
+	router.Get("/", helloHandler)
+
+	err := http.ListenAndServe(":8080", router)
+	if err != nil {
+		logx.Errorf("listen and serve http failed, err=%v", err)
+		return
+	}
 }

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/luozi-csu/lzblogs/utils"
 )
 
 const (
@@ -28,11 +30,7 @@ type logHelper struct {
 func InitLogger(level int, path string) {
 	logger.level = level
 	logger.logPath = path
-
-	timeStr := time.Now().Format("2006-01-02")
-	t, _ := time.ParseInLocation("2006-01-02", timeStr, time.Local)
-	logger.logTime = t.Unix()
-
+	logger.logTime = utils.ZeroTime()
 	logger.createLogFile()
 
 	log.SetOutput(logger)
@@ -84,10 +82,9 @@ func (logger logHelper) Write(buf []byte) (n int, err error) {
 		return len(buf), nil
 	}
 
-	var daySeconds int64 = 24 * 60 * 60
-	if logger.logTime+daySeconds < time.Now().Unix() {
+	if logger.logTime+86400 < time.Now().Unix() {
 		logger.createLogFile()
-		logger.logTime = time.Now().Unix()
+		logger.logTime = utils.ZeroTime()
 	}
 
 	return logger.fd.Write(buf)
@@ -115,8 +112,6 @@ func (logger *logHelper) createLogFile() {
 			logger.fd.Close()
 			logger.fd = fd
 			break
-		} else {
-			fmt.Println(err)
 		}
 
 		logger.fd = nil

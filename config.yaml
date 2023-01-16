@@ -1,4 +1,5 @@
-port: 443
-logging:
-  level: error
-  path: "log/lzblogs"
+server:
+  port: 8080
+  logging:
+    level: error
+    path: "log/lzblogs"

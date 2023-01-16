@@ -11,13 +11,14 @@ import (
 type logger struct{}
 
 func (l logger) Print(v ...interface{}) {
+	log.SetPrefix("[debug] ")
 	log.Output(2, fmt.Sprint(v...))
 }
 
 func RequestLogger(next http.Handler) http.Handler {
-	middleware.DefaultLogger = middleware.RequestLogger(&middleware.DefaultLogFormatter{
+	requestLogger := middleware.RequestLogger(&middleware.DefaultLogFormatter{
 		Logger:  logger{},
 		NoColor: true,
 	})
-	return middleware.Logger(next)
+	return requestLogger(next)
 }

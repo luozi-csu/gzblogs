@@ -10,11 +10,17 @@ import (
 var CONF Config
 
 type Config struct {
-	Port    int `yaml:"port"`
-	Logging struct {
-		Level string `yaml:"level"`
-		Path  string `yaml:"path"`
-	}
+	Server ServerConfig `yaml:"server"`
+}
+
+type ServerConfig struct {
+	Port    int                 `yaml:"port"`
+	Logging ServerLoggingConfig `yaml:"logging"`
+}
+
+type ServerLoggingConfig struct {
+	Level string `yaml:"level"`
+	Path  string `yaml:"path"`
 }
 
 func LoadConfig(configFilePath string) {

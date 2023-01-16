@@ -7,84 +7,66 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luozi-csu/lzblogs/utils"
+	"github.com/luozi-csu/lzblogs/config"
 )
 
 const (
-	debugLevel int = iota
-	infoLevel
-	warnLevel
-	errorLevel
-	fatalLevel
+	DebugLevel int = iota
+	InfoLevel
+	WarnLevel
+	ErrorLevel
+	FatalLevel
 )
 
 var logger logHelper
 
 type logHelper struct {
-	level   int
-	logPath string
-	logTime int64
+	level   *string
+	logPath *string
 	fd      *os.File
 }
 
-func InitLogger(level int, path string) {
-	logger.level = level
-	logger.logPath = path
-	logger.logTime = utils.ZeroTime()
-	logger.createLogFile()
-
-	log.SetOutput(logger)
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-}
-
-func SetLevel(level int) {
-	logger.level = level
-}
-
 func Debugf(format string, args ...interface{}) {
-	if logger.level >= debugLevel {
+	if logger.getLogLevel() >= DebugLevel {
 		log.SetPrefix("[debug] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Infof(format string, args ...interface{}) {
-	if logger.level >= infoLevel {
+	if logger.getLogLevel() >= InfoLevel {
 		log.SetPrefix("[info] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Warnf(format string, args ...interface{}) {
-	if logger.level >= warnLevel {
+	if logger.getLogLevel() >= WarnLevel {
 		log.SetPrefix("[warn] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Errorf(format string, args ...interface{}) {
-	if logger.level >= errorLevel {
+	if logger.getLogLevel() >= ErrorLevel {
 		log.SetPrefix("[error] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Fatalf(format string, args ...interface{}) {
-	if logger.level >= fatalLevel {
+	if logger.getLogLevel() >= FatalLevel {
 		log.SetPrefix("[fatal] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func (logger logHelper) Write(buf []byte) (n int, err error) {
+	logger.createLogFile()
+
 	if logger.fd == nil {
 		fmt.Printf("console: %s", buf)
 		return len(buf), nil
-	}
-
-	if logger.logTime+86400 < time.Now().Unix() {
-		logger.createLogFile()
-		logger.logTime = utils.ZeroTime()
 	}
 
 	return logger.fd.Write(buf)
@@ -92,17 +74,18 @@ func (logger logHelper) Write(buf []byte) (n int, err error) {
 
 func (logger *logHelper) createLogFile() {
 	logdir := "./"
-	index := strings.LastIndex(logger.logPath, "/")
+	logPath := *logger.logPath
+	index := strings.LastIndex(logPath, "/")
 	if index != -1 {
-		logdir = logger.logPath[0:index] + "/"
-		os.MkdirAll(logger.logPath[0:index], os.ModePerm)
+		logdir = logPath[0:index] + "/"
+		os.MkdirAll(logPath[0:index], os.ModePerm)
 	}
 
 	now := time.Now()
 
 	var prefix string
-	if index != -1 && index != len(logger.logPath)-1 {
-		prefix = logger.logPath[index+1:] + "_"
+	if index != -1 && index != len(logPath)-1 {
+		prefix = logPath[index+1:] + "_"
 	}
 
 	filename := fmt.Sprintf("%s%04d%02d%02d.log", prefix, now.Year(), now.Month(), now.Day())
@@ -116,4 +99,30 @@ func (logger *logHelper) createLogFile() {
 
 		logger.fd = nil
 	}
+}
+
+func (logger *logHelper) getLogLevel() int {
+	var level int
+	logLevelStr := *logger.level
+	switch logLevelStr {
+	case "debug":
+		level = DebugLevel
+	case "info":
+		level = InfoLevel
+	case "warn":
+		level = WarnLevel
+	case "error":
+		level = ErrorLevel
+	case "fatal":
+		level = FatalLevel
+	}
+	return level
+}
+
+func init() {
+	logger.level = &config.CONF.Server.Logging.Level
+	logger.logPath = &config.CONF.Server.Logging.Path
+
+	log.SetOutput(logger)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }

@@ -27,35 +27,35 @@ type logHelper struct {
 }
 
 func Debugf(format string, args ...interface{}) {
-	if logger.getLogLevel() >= DebugLevel {
+	if logger.getLogLevel() <= DebugLevel {
 		log.SetPrefix("[debug] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Infof(format string, args ...interface{}) {
-	if logger.getLogLevel() >= InfoLevel {
+	if logger.getLogLevel() <= InfoLevel {
 		log.SetPrefix("[info] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Warnf(format string, args ...interface{}) {
-	if logger.getLogLevel() >= WarnLevel {
+	if logger.getLogLevel() <= WarnLevel {
 		log.SetPrefix("[warn] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Errorf(format string, args ...interface{}) {
-	if logger.getLogLevel() >= ErrorLevel {
+	if logger.getLogLevel() <= ErrorLevel {
 		log.SetPrefix("[error] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
 func Fatalf(format string, args ...interface{}) {
-	if logger.getLogLevel() >= FatalLevel {
+	if logger.getLogLevel() <= FatalLevel {
 		log.SetPrefix("[fatal] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
@@ -101,8 +101,7 @@ func (logger *logHelper) createLogFile() {
 	}
 }
 
-func (logger *logHelper) getLogLevel() int {
-	var level int
+func (logger *logHelper) getLogLevel() (level int) {
 	logLevelStr := *logger.level
 	switch logLevelStr {
 	case "debug":
@@ -116,7 +115,7 @@ func (logger *logHelper) getLogLevel() int {
 	case "fatal":
 		level = FatalLevel
 	}
-	return level
+	return
 }
 
 func init() {

@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi"
 	"github.com/luozi-csu/lzblogs/config"
-	"github.com/luozi-csu/lzblogs/middleware"
-	"github.com/luozi-csu/lzblogs/util/logx"
+	"github.com/luozi-csu/lzblogs/server"
+	"github.com/luozi-csu/lzblogs/utils/logx"
 )
 
 var configFile = flag.String("f", "./config.yaml", "path of the global config file")
@@ -23,17 +22,25 @@ func main() {
 
 	config.LoadConfig(*configFile)
 
-	logx.Debugf("this is a debug level message")
-	logx.Infof("this is an info level message")
-
-	router := chi.NewRouter()
-	router.Use(middleware.RequestLogger)
-
-	router.Get("/", helloHandler)
-
-	err := http.ListenAndServe(fmt.Sprintf(":%d", config.CONF.Server.Port), router)
+	logger, err := logx.NewLogger(config.CONF.Server.Logging.Level, config.CONF.Server.Logging.Path)
 	if err != nil {
-		logx.Errorf("listen and serve http failed, err=%v", err)
+		fmt.Printf("new logger failed, err=%v", err)
+		return
+	}
+
+	logger.Debugf("this is a debug level message")
+	logger.Infof("this is an info level message")
+	logger.Warnf("this is a warn level message")
+
+	server, err := server.New(logger)
+	if err != nil {
+		logger.Errorf("new server failed, err=%v", err)
+		return
+	}
+
+	err = server.Run()
+	if err != nil {
+		logger.Errorf("run server failed, err=%v", err)
 		return
 	}
 }

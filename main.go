@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 
 	"github.com/luozi-csu/lzblogs/config"
 	"github.com/luozi-csu/lzblogs/server"
@@ -12,35 +11,29 @@ import (
 
 var configFile = flag.String("f", "./config.yaml", "path of the global config file")
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	message := "hello world"
-	w.Write([]byte(message))
-}
-
 func main() {
 	flag.Parse()
 
 	config.LoadConfig(*configFile)
 
-	logger, err := logx.NewLogger(config.CONF.Server.Logging.Level, config.CONF.Server.Logging.Path)
+	err := logx.ConfigLogger(&config.CONF.Server.Logging)
 	if err != nil {
-		fmt.Printf("new logger failed, err=%v", err)
+		fmt.Printf("initialize logger failed, err=%v", err)
 		return
 	}
 
-	logger.Debugf("this is a debug level message")
-	logger.Infof("this is an info level message")
-	logger.Warnf("this is a warn level message")
+	logx.Debugf("this is a debug level message")
+	logx.Infof("this is an info level message")
+	logx.Warnf("this is a warn level message")
 
-	server, err := server.New(logger)
+	server, err := server.New()
 	if err != nil {
-		logger.Errorf("new server failed, err=%v", err)
+		logx.Fatalf("create server failed, err=%v", err)
 		return
 	}
 
-	err = server.Run()
-	if err != nil {
-		logger.Errorf("run server failed, err=%v", err)
+	if err = server.Run(); err != nil {
+		logx.Fatalf("run server failed, err=%v", err)
 		return
 	}
 }

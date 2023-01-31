@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/luozi-csu/lzblogs/config"
 	"github.com/luozi-csu/lzblogs/utils"
 )
 
@@ -18,6 +19,10 @@ const (
 	FatalLevel
 )
 
+var (
+	defaultLogger *Logger
+)
+
 type Logger struct {
 	level   int
 	logTime int64
@@ -25,41 +30,36 @@ type Logger struct {
 	fd      *os.File
 }
 
-func (logger *Logger) Debugf(format string, args ...interface{}) {
-	if logger.level <= DebugLevel {
-		log.SetOutput(logger)
+func Debugf(format string, args ...interface{}) {
+	if defaultLogger.level <= DebugLevel {
 		log.SetPrefix("[debug] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger *Logger) Infof(format string, args ...interface{}) {
-	if logger.level <= InfoLevel {
-		log.SetOutput(logger)
+func Infof(format string, args ...interface{}) {
+	if defaultLogger.level <= InfoLevel {
 		log.SetPrefix("[info] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger *Logger) Warnf(format string, args ...interface{}) {
-	if logger.level <= WarnLevel {
-		log.SetOutput(logger)
+func Warnf(format string, args ...interface{}) {
+	if defaultLogger.level <= WarnLevel {
 		log.SetPrefix("[warn] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger *Logger) Errorf(format string, args ...interface{}) {
-	if logger.level <= ErrorLevel {
-		log.SetOutput(logger)
+func Errorf(format string, args ...interface{}) {
+	if defaultLogger.level <= ErrorLevel {
 		log.SetPrefix("[error] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
 }
 
-func (logger *Logger) Fatalf(format string, args ...interface{}) {
-	if logger.level <= FatalLevel {
-		log.SetOutput(logger)
+func Fatalf(format string, args ...interface{}) {
+	if defaultLogger.level <= FatalLevel {
 		log.SetPrefix("[fatal] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
@@ -107,9 +107,9 @@ func (logger *Logger) createLogFile() {
 	}
 }
 
-func ParseLevel(levelStr string) (int, error) {
+func ParseLevel(lvl string) (int, error) {
 	var level int
-	switch strings.ToLower(levelStr) {
+	switch strings.ToLower(lvl) {
 	case "debug":
 		level = DebugLevel
 	case "info":
@@ -121,25 +121,28 @@ func ParseLevel(levelStr string) (int, error) {
 	case "fatal":
 		level = FatalLevel
 	default:
-		return level, fmt.Errorf("%s is not a valid level", levelStr)
+		return level, fmt.Errorf("%s is not a valid level", lvl)
 	}
 
 	return level, nil
 }
 
-func NewLogger(level, path string) (*Logger, error) {
-	lvl, err := ParseLevel(level)
+func ConfigLogger(cfg *config.ServerLoggingConfig) error {
+	l, err := ParseLevel(cfg.Level)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	logger := &Logger{
-		level: lvl,
-		logPath: path,
+
+	defaultLogger = &Logger{
+		level:   l,
+		logPath: cfg.Path,
 		logTime: utils.Zerotime(),
 	}
-	logger.createLogFile()
+	if cfg.IsFile {
+		defaultLogger.createLogFile()
+	}
 
-	log.SetOutput(logger)
+	log.SetOutput(defaultLogger)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	return logger, nil
+	return nil
 }

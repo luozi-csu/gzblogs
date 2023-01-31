@@ -14,18 +14,19 @@ import (
 )
 
 type Server struct {
-	e      *gin.Engine
-	logger *logx.Logger
+	e *gin.Engine
 }
 
-func New(logger *logx.Logger) (*Server, error) {
+func New() (*Server, error) {
 	s := &Server{
-		e:      gin.Default(),
-		logger: logger,
+		e: gin.New(),
 	}
 
-	s.e.Use(middleware.RequestLogger(logger))
-	s.e.GET("/", func (c *gin.Context)  {
+	s.e.Use(
+		gin.Recovery(),
+		middleware.RequestLogger,
+	)
+	s.e.GET("/", func(c *gin.Context) {
 		c.JSON(200, "hello world")
 	})
 
@@ -40,7 +41,7 @@ func (s *Server) Run() error {
 
 	go func() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			s.logger.Fatalf("Failed to start server, %v", err)
+			logx.Fatalf("Failed to start server, %v", err)
 		}
 	}()
 
@@ -51,7 +52,7 @@ func (s *Server) Run() error {
 	defer cancel()
 
 	ch := <-sig
-	s.logger.Infof("Receive signal: %s", ch)
+	logx.Infof("Receive signal: %s", ch)
 
 	return server.Shutdown(ctx)
 }

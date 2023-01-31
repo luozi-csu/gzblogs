@@ -3,34 +3,41 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/luozi-csu/lzblogs/utils/logx"
 )
 
-func RequestLogger(logger *logx.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
+var (
+	hostname, _ = os.Hostname()
+)
 
-		defer func() {
-			latency := time.Since(start)
-			statusCode := c.Writer.Status()
+func RequestLogger(c *gin.Context) {
+	start := time.Now()
 
-			if len(c.Errors) > 0 {
-				logger.Errorf(c.Errors.ByType(gin.ErrorTypePrivate).String())
+	defer func() {
+		latency := time.Since(start)
+		statusCode := c.Writer.Status()
+		clientIP := c.ClientIP()
+		clientUserAgent := c.Request.UserAgent()
+
+		msg := fmt.Sprintf("[%s %s] %d %v", c.Request.Method, c.Request.URL, statusCode, latency)
+		requestInfo := fmt.Sprintf("msg=%s hostname=%s clientIP=%s userAgent=%s", msg, hostname, clientIP, clientUserAgent)
+
+		if len(c.Errors) > 0 {
+			logx.Errorf(c.Errors.ByType(gin.ErrorTypePrivate).String())
+		} else {
+			if statusCode >= http.StatusInternalServerError {
+				logx.Errorf(requestInfo)
+			} else if statusCode >= http.StatusBadRequest {
+				logx.Warnf(requestInfo)
 			} else {
-				msg := fmt.Sprintf("[%s %s] %d %v", c.Request.Method, c.Request.URL, statusCode, latency)
-				if statusCode >= http.StatusInternalServerError {
-					logger.Errorf(msg)
-				} else if statusCode >= http.StatusBadRequest {
-					logger.Warnf(msg)
-				} else {
-					logger.Infof(msg)
-				}
+				logx.Infof(requestInfo)
 			}
-		}()
+		}
+	}()
 
-		c.Next()
-	}
+	c.Next()
 }

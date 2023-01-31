@@ -19,8 +19,9 @@ type ServerConfig struct {
 }
 
 type ServerLoggingConfig struct {
-	Level string `yaml:"level"`
-	Path  string `yaml:"path"`
+	IsFile bool   `yaml:"file"`
+	Level  string `yaml:"level"`
+	Path   string `yaml:"path"`
 }
 
 func LoadConfig(configFilePath string) {

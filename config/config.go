@@ -1,16 +1,17 @@
 package config
 
 import (
-	"log"
 	"os"
 
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
 var CONF Config
 
 type Config struct {
-	Server ServerConfig `yaml:"server"`
+	Server   ServerConfig   `yaml:"server"`
+	Database DatabaseConfig `yaml:"database"`
 }
 
 type ServerConfig struct {
@@ -24,14 +25,25 @@ type ServerLoggingConfig struct {
 	Path   string `yaml:"path"`
 }
 
-func LoadConfig(configFilePath string) {
+type DatabaseConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Name     string `yaml:"name"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+}
+
+func NewConfig(configFilePath string) (*Config, error) {
 	content, err := os.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatalf("read config file failed, err=%v", err)
+		return nil, errors.Wrap(err, "read config file failed")
 	}
 
-	err = yaml.Unmarshal(content, &CONF)
+	var conf Config
+	err = yaml.Unmarshal(content, &conf)
 	if err != nil {
-		log.Fatalf("parse config file failed, err=%v", err)
+		return nil, errors.Wrap(err, "parse config file failed")
 	}
+
+	return &conf, nil
 }

@@ -20,10 +20,10 @@ const (
 )
 
 var (
-	defaultLogger *Logger
+	defaultLogger *logger
 )
 
-type Logger struct {
+type logger struct {
 	level   int
 	logTime int64
 	logPath string
@@ -63,9 +63,10 @@ func Fatalf(format string, args ...interface{}) {
 		log.SetPrefix("[fatal] ")
 		log.Output(2, fmt.Sprintf(format, args...))
 	}
+	os.Exit(1)
 }
 
-func (logger *Logger) Write(buf []byte) (n int, err error) {
+func (logger *logger) Write(buf []byte) (n int, err error) {
 	if logger.fd == nil {
 		fmt.Printf("console: %s", buf)
 		return len(buf), nil
@@ -79,7 +80,7 @@ func (logger *Logger) Write(buf []byte) (n int, err error) {
 	return logger.fd.Write(buf)
 }
 
-func (logger *Logger) createLogFile() {
+func (logger *logger) createLogFile() {
 	logdir := "./"
 	index := strings.LastIndex(logger.logPath, "/")
 	if index != -1 {
@@ -127,13 +128,13 @@ func ParseLevel(lvl string) (int, error) {
 	return level, nil
 }
 
-func ConfigLogger(cfg *config.ServerLoggingConfig) error {
+func Init(cfg *config.ServerLoggingConfig) error {
 	l, err := ParseLevel(cfg.Level)
 	if err != nil {
 		return err
 	}
 
-	defaultLogger = &Logger{
+	defaultLogger = &logger{
 		level:   l,
 		logPath: cfg.Path,
 		logTime: utils.Zerotime(),

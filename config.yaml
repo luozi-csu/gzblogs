@@ -4,3 +4,10 @@ server:
     file: true
     level: debug
     path: "log/lzblogs"
+
+database:
+  host: "127.0.0.1"
+  port: 33060
+  name: "lzblogs"
+  user: "luozi"
+  password: "123456"

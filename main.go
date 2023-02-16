@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	server, err := server.New()
+	server, err := server.New(conf)
 	if err != nil {
 		logx.Fatalf("create server failed, err=%v", err)
 	}

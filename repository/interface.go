@@ -19,13 +19,10 @@ type Migrant interface {
 
 type UserRepository interface {
 	GetUserByID(uint) (*model.User, error)
-	GetUserByAuthID(authType, authID string) (*model.User, error)
 	GetUserByName(string) (*model.User, error)
 	List() (model.Users, error)
 	Create(*model.User) (*model.User, error)
 	Update(*model.User) (*model.User, error)
 	Delete(*model.User) error
-	AddRole(role *model.Role, user *model.User) error
-	DelRole(role *model.Role, user *model.User) error
 	Migrate() error
 }

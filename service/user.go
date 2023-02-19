@@ -29,27 +29,27 @@ func (u *userService) List() (model.Users, error) {
 	return u.userRepository.List()
 }
 
-func (u *userService) Create(user *model.User) (*model.User, error) {
-	if user == nil {
-		return nil, errors.New("empty user")
+func (u *userService) Create(input *model.CreateUserInput) (*model.User, error) {
+	if input == nil {
+		return nil, errors.New("empty createUserInput")
 	}
 	// 使用bcrypt加密
-	pwd, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	pwd, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.Wrap(err, "encryption failed")
 	}
-	user.Password = string(pwd)
-	return u.userRepository.Create(user)
+	input.Password = string(pwd)
+	return u.userRepository.Create(input.GetUser())
 }
 
-func (u *userService) Update(id string, new *model.User) (*model.User, error) {
+func (u *userService) Update(id string, new *model.UpdateUserInput) (*model.User, error) {
 	old, err := u.getUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	if new == nil {
-		logx.Warnf("get empty user input when update")
+		logx.Warnf("empty UpdateUserInput")
 		return nil, nil
 	}
 
@@ -58,7 +58,7 @@ func (u *userService) Update(id string, new *model.User) (*model.User, error) {
 	}
 	new.ID = old.ID
 
-	return u.userRepository.Update(new)
+	return u.userRepository.Update(new.GetUser())
 }
 
 func (u *userService) Delete(id string) error {

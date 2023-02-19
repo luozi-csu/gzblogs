@@ -29,19 +29,18 @@ func NewUserController(userService service.UserService) Controller {
 // @Success 200 {object} common.Response{data=model.User}
 // @Router /api/v1/users [post]
 func (u *UserController) Create(c *gin.Context) {
-	createdUser := new(model.CreatedUser)
-	if err := c.BindJSON(createdUser); err != nil {
+	createUserInput := new(model.CreateUserInput)
+	if err := c.BindJSON(createUserInput); err != nil {
 		common.ResponseFailed(c, http.StatusBadRequest, err)
 		return
 	}
 
-	user := createdUser.GetUser()
 	// if err := u.userService.Validate(user); err != nil {
 	// 	common.ResponseFailed(c, http.StatusBadRequest, err)
 	// 	return
 	// }
 
-	user, err := u.userService.Create(user)
+	user, err := u.userService.Create(createUserInput)
 	if err != nil {
 		common.ResponseFailed(c, http.StatusInternalServerError, err)
 		return

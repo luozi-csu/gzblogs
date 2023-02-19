@@ -13,18 +13,45 @@ type User struct {
 
 type Users []User
 
-type CreatedUser struct {
+// 重写gorm表名
+func (*User) TableName() string {
+	return "users"
+}
+
+type CreateUserInput struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
 }
 
-func (u *CreatedUser) GetUser() *User {
+func (u *CreateUserInput) GetUser() *User {
 	return &User{
 		Name:     u.Name,
 		Password: u.Password,
 		Email:    u.Email,
 		Avatar:   u.Avatar,
+	}
+}
+
+type UpdateUserInput struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Avatar   string `json:"avatar"`
+	Sign     string `json:"sign"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+}
+
+func (u *UpdateUserInput) GetUser() *User {
+	return &User{
+		ID:       u.ID,
+		Name:     u.Name,
+		Password: u.Password,
+		Avatar:   u.Avatar,
+		Sign:     u.Sign,
+		Phone:    u.Phone,
+		Email:    u.Email,
 	}
 }

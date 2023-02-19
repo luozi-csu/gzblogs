@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,19 +37,18 @@ func ResponseFailed(c *gin.Context, code int, err error) {
 		}
 	}
 
-	var msg string
-	if err != nil {
-		msg = err.Error()
-		user := GetUser(c)
-		var name string
-		if user != nil {
-			name = user.Name
-		}
-		var url string
-		if c.Request != nil {
-			url = c.Request.URL.String()
-		}
-		logx.Warnf("url: %s, user: %s, error: %v", url, name, msg)
+	var msg, userName string
+	user := GetUser(c)
+	if user != nil {
+		userName = user.Name
 	}
+
+	if userName == "" {
+		msg = fmt.Sprintf("user=unknown request=[%s %s] error=%v", c.Request.Method, c.Request.URL.Path, err)
+	} else {
+		msg = fmt.Sprintf("user=%s request=[%s %s] error=%v", userName, c.Request.Method, c.Request.URL.Path, err)
+	}
+	logx.Errorf(msg)
+
 	NewResponse(c, code, nil, msg)
 }

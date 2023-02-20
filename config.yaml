@@ -4,6 +4,7 @@ server:
     file: true
     level: debug
     path: "log/lzblogs"
+  rbacModelConf: "./model.conf"
 
 database:
   host: "127.0.0.1"
@@ -11,3 +12,4 @@ database:
   name: "lzblogs"
   user: "luozi"
   password: "123456"
+  migrate: true

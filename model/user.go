@@ -1,7 +1,6 @@
 package model
 
 type User struct {
-	BaseModel
 	ID       uint   `json:"id" gorm:"autoIncrement;primaryKey"`
 	Name     string `json:"name" gorm:"size:100;not null;unique"`
 	Password string `json:"-" gorm:"size:256"`
@@ -9,6 +8,7 @@ type User struct {
 	Sign     string `json:"sign" gorm:"size:256"`
 	Phone    string `json:"phone" gorm:"size:20"`
 	Email    string `json:"email" gorm:"size:256"`
+	BaseModel
 }
 
 type Users []User

@@ -25,7 +25,7 @@ func NewUserController(userService service.UserService) Controller {
 // @Produce json
 // @Tags user
 // @Security JWT
-// @Param user body model.CreatedUser true "user info"
+// @Param user body model.CreateUserInput true "user info"
 // @Success 200 {object} common.Response{data=model.User}
 // @Router /api/v1/users [post]
 func (u *UserController) Create(c *gin.Context) {
@@ -49,6 +49,6 @@ func (u *UserController) Create(c *gin.Context) {
 	common.ResponseSuccess(c, user)
 }
 
-func (u *UserController) RegisterRoute(api *gin.RouterGroup) {
-	api.POST("/users", u.Create)
+func (u *UserController) RegisterRoute(rg *gin.RouterGroup) {
+	rg.POST("/users", u.Create)
 }

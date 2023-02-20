@@ -28,6 +28,7 @@ type Server struct {
 func New(conf *config.Config) (*Server, error) {
 	s := &Server{
 		engine: gin.New(),
+		conf:   conf,
 	}
 
 	db, err := database.NewMysql(&conf.Database)
@@ -35,12 +36,27 @@ func New(conf *config.Config) (*Server, error) {
 		return nil, errors.Wrap(err, "init database failed")
 	}
 
-	repository := repository.NewRepository(db)
+	adapter, err := database.NewMysqlAdapter(db)
+	if err != nil {
+		return nil, errors.Wrap(err, "create database adapter failed")
+	}
 
+	repository := repository.NewRepository(db, conf.Server.RBACModelConf, adapter)
+	if conf.Database.Migrate {
+		if err = repository.Migrate(); err != nil {
+			return nil, errors.Wrap(err, "database auto migration failed")
+		}
+	}
+
+	// services
 	userService := service.NewUserService(repository.User())
-	userController := controller.NewUserController(userService)
+	rbacService := service.NewRBACService(repository.RBAC())
 
-	s.controllers = append(s.controllers, userController)
+	// controllers
+	userController := controller.NewUserController(userService)
+	rbacController := controller.NewRBACController(rbacService)
+
+	s.controllers = append(s.controllers, userController, rbacController)
 
 	s.engine.Use(
 		gin.Recovery(),

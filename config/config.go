@@ -15,8 +15,9 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port    int                 `yaml:"port"`
-	Logging ServerLoggingConfig `yaml:"logging"`
+	Port          int                 `yaml:"port"`
+	Logging       ServerLoggingConfig `yaml:"logging"`
+	RBACModelConf string              `yaml:"rbacModelConf"`
 }
 
 type ServerLoggingConfig struct {
@@ -31,6 +32,7 @@ type DatabaseConfig struct {
 	Name     string `yaml:"name"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+	Migrate  bool   `yaml:"migrate"`
 }
 
 func NewConfig(configFilePath string) (*Config, error) {

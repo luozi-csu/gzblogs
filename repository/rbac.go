@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"github.com/casbin/casbin/v2"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/luozi-csu/lzblogs/model"
@@ -58,7 +56,7 @@ func (rbac *rbacRepository) AddPolicy(policy *model.Policy) (*model.Policy, erro
 		return nil, err
 	}
 	if !ok {
-		return policy, errors.New("policy already exists")
+		return nil, errors.New("policy already exists")
 	}
 
 	return policy, nil
@@ -67,12 +65,12 @@ func (rbac *rbacRepository) AddPolicy(policy *model.Policy) (*model.Policy, erro
 func (rbac *rbacRepository) AddRole(role *model.Role) (*model.Role, error) {
 	rule := convertRoleToSlice(role)
 
-	ok, err := rbac.enforcer.AddPolicy(rule...)
+	ok, err := rbac.enforcer.AddGroupingPolicy(rule...)
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		return role, errors.New("role already exists")
+		return nil, errors.New("role already exists")
 	}
 
 	return role, nil
@@ -80,12 +78,8 @@ func (rbac *rbacRepository) AddRole(role *model.Role) (*model.Role, error) {
 
 func (rbac *rbacRepository) AddPolicies(policies []model.Policy) ([]model.Policy, error) {
 	var rules [][]string
-	n := len(policies)
-	if n == 0 {
-		return nil, errors.New("empty policies")
-	}
 
-	for i := 0; i < n; i++ {
+	for i := 0; i < len(policies); i++ {
 		rules = append(rules, convertPolicyToStrSlice(&policies[i]))
 	}
 	ok, err := rbac.enforcer.AddPolicies(rules)
@@ -93,7 +87,7 @@ func (rbac *rbacRepository) AddPolicies(policies []model.Policy) ([]model.Policy
 		return nil, err
 	}
 	if !ok {
-		return policies, errors.New("some policies already exist")
+		return nil, errors.New("some policies already exist")
 	}
 
 	return policies, nil
@@ -101,12 +95,8 @@ func (rbac *rbacRepository) AddPolicies(policies []model.Policy) ([]model.Policy
 
 func (rbac *rbacRepository) AddRoles(roles []model.Role) ([]model.Role, error) {
 	var rules [][]string
-	n := len(roles)
-	if n == 0 {
-		return nil, errors.New("empty roles")
-	}
 
-	for i := 0; i < n; i++ {
+	for i := 0; i < len(roles); i++ {
 		rules = append(rules, convertRoleToStrSlice(&roles[i]))
 	}
 	ok, err := rbac.enforcer.AddGroupingPolicies(rules)
@@ -114,35 +104,33 @@ func (rbac *rbacRepository) AddRoles(roles []model.Role) ([]model.Role, error) {
 		return nil, err
 	}
 	if !ok {
-		return roles, errors.New("some roles already exist")
+		return nil, errors.New("some roles already exist")
 	}
 
 	return roles, nil
 }
 
 func (rbac *rbacRepository) UpdatePolicy(old, new *model.Policy) (*model.Policy, error) {
-	oldRule := convertPolicyToStrSlice(old)
-	newRule := convertPolicyToStrSlice(new)
+	oldRule, newRule := convertPolicyToStrSlice(old), convertPolicyToStrSlice(new)
 	ok, err := rbac.enforcer.UpdatePolicy(oldRule, newRule)
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		return old, errors.New("update failed")
+		return nil, errors.New("old policy not found")
 	}
 
 	return new, nil
 }
 
 func (rbac *rbacRepository) UpdateRole(old, new *model.Role) (*model.Role, error) {
-	oldRule := convertRoleToStrSlice(old)
-	newRule := convertRoleToStrSlice(new)
+	oldRule, newRule := convertRoleToStrSlice(old), convertRoleToStrSlice(new)
 	ok, err := rbac.enforcer.UpdateGroupingPolicy(oldRule, newRule)
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		return old, errors.New("update failed")
+		return nil, errors.New("old role not found")
 	}
 
 	return new, nil
@@ -151,8 +139,11 @@ func (rbac *rbacRepository) UpdateRole(old, new *model.Role) (*model.Role, error
 func (rbac *rbacRepository) RemovePolicy(policy *model.Policy) error {
 	rule := convertPolicyToSlice(policy)
 	ok, err := rbac.enforcer.RemovePolicy(rule...)
-	if !ok || err != nil {
-		return fmt.Errorf("remove policy=%v failed", policy)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("policy not found")
 	}
 
 	return nil
@@ -161,8 +152,11 @@ func (rbac *rbacRepository) RemovePolicy(policy *model.Policy) error {
 func (rbac *rbacRepository) RemoveRole(role *model.Role) error {
 	rule := convertRoleToSlice(role)
 	ok, err := rbac.enforcer.RemoveGroupingPolicy(rule...)
-	if !ok || err != nil {
-		return fmt.Errorf("remove role=%v failed", role)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("role not found")
 	}
 
 	return nil

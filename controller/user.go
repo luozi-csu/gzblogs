@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/luozi-csu/lzblogs/common"
 	"github.com/luozi-csu/lzblogs/model"
 	"github.com/luozi-csu/lzblogs/service"
@@ -30,7 +31,7 @@ func NewUserController(userService service.UserService) Controller {
 // @Router /api/v1/users [post]
 func (u *UserController) Create(c *gin.Context) {
 	createUserInput := new(model.CreateUserInput)
-	if err := c.BindJSON(createUserInput); err != nil {
+	if err := c.ShouldBindWith(createUserInput, binding.JSON); err != nil {
 		common.ResponseFailed(c, http.StatusBadRequest, err)
 		return
 	}

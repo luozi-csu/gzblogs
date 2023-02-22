@@ -33,28 +33,20 @@ type Role struct {
 	Name    string `json:"name"`
 }
 
-type CreatePolicyInput struct {
-	Subject string    `json:"subject"`
-	Object  string    `json:"object"`
-	Action  Operation `json:"action"`
+type UpdatePolicyInput struct {
+	Old *Policy `json:"old"`
+	New *Policy `json:"new"`
 }
 
-func (p *CreatePolicyInput) GetPolicy() *Policy {
-	return &Policy{
-		Subject: p.Subject,
-		Object:  p.Object,
-		Action:  p.Action,
-	}
+type UpdateRoleInput struct {
+	Old *Role `json:"old"`
+	New *Role `json:"new"`
 }
 
-type CreateRoleInput struct {
-	Subject string `json:"subject"`
-	Name    string `json:"name"`
+type CreatePoliciesInput struct {
+	Policies []Policy `json:"policies"`
 }
 
-func (r *CreateRoleInput) GetRole() *Role {
-	return &Role{
-		Subject: r.Subject,
-		Name:    r.Name,
-	}
+type CreateRolesInput struct {
+	Roles []Role `json:"roles"`
 }

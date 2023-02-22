@@ -6,9 +6,12 @@ import (
 
 	"github.com/luozi-csu/lzblogs/model"
 	"github.com/luozi-csu/lzblogs/repository"
-	"github.com/luozi-csu/lzblogs/utils/logx"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	MinPasswordLength = 6
 )
 
 type userService struct {
@@ -31,7 +34,13 @@ func (u *userService) List() (model.Users, error) {
 
 func (u *userService) Create(input *model.CreateUserInput) (*model.User, error) {
 	if input == nil {
-		return nil, errors.New("empty createUserInput")
+		return nil, errors.New("empty user input")
+	}
+	if input.Name == "" {
+		return nil, errors.New("empty user name")
+	}
+	if len(input.Password) < MinPasswordLength {
+		return nil, fmt.Errorf("password length must great than %d", MinPasswordLength)
 	}
 	// 使用bcrypt加密
 	pwd, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
@@ -49,8 +58,7 @@ func (u *userService) Update(id string, new *model.UpdateUserInput) (*model.User
 	}
 
 	if new == nil {
-		logx.Warnf("empty UpdateUserInput")
-		return nil, nil
+		return nil, errors.New("emtpy user input")
 	}
 
 	if new.ID != 0 && old.ID != new.ID {

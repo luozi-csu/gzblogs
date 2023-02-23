@@ -22,3 +22,11 @@ func GetUser(c *gin.Context) *model.User {
 
 	return user
 }
+
+func SetUser(c *gin.Context, user *model.User) {
+	if c == nil || user == nil {
+		return
+	}
+
+	c.Set(UserContextKey, user)
+}

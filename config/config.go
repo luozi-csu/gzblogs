@@ -12,12 +12,14 @@ var CONF Config
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
+	OAuth    OAuthConfig    `yaml:"oauth"`
 }
 
 type ServerConfig struct {
 	Port          int                 `yaml:"port"`
 	Logging       ServerLoggingConfig `yaml:"logging"`
 	RBACModelConf string              `yaml:"rbacModelConf"`
+	JWTSecret     string              `yaml:"jwtSecret"`
 }
 
 type ServerLoggingConfig struct {
@@ -33,6 +35,15 @@ type DatabaseConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Migrate  bool   `yaml:"migrate"`
+}
+
+type OAuthConfig struct {
+	Github GithubOAuthConfig `yaml:"github"`
+}
+
+type GithubOAuthConfig struct {
+	ClientID     string `yaml:"clientID"`
+	ClientSecret string `yaml:"clientSecret"`
 }
 
 func NewConfig(configFilePath string) (*Config, error) {

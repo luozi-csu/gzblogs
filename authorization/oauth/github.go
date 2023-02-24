@@ -2,8 +2,9 @@ package oauth
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -115,7 +116,7 @@ func (g *GithubAuth) GetToken(code string) (*oauth2.Token, error) {
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "read response body failed")
 	}
@@ -150,7 +151,7 @@ func (g *GithubAuth) GetUserInfo(token *oauth2.Token) (*UserInfo, error) {
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "read response body failed")
 	}
@@ -161,7 +162,7 @@ func (g *GithubAuth) GetUserInfo(token *oauth2.Token) (*UserInfo, error) {
 	}
 
 	return &UserInfo{
-		ID:          githubUserInfo.ID,
+		ID:          strconv.Itoa(githubUserInfo.ID),
 		Url:         githubUserInfo.Url,
 		AuthType:    GithubAuthType,
 		Username:    githubUserInfo.Login,

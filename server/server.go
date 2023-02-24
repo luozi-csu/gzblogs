@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/luozi-csu/lzblogs/authentication"
+	"github.com/luozi-csu/lzblogs/authorization/oauth"
 	"github.com/luozi-csu/lzblogs/config"
 	"github.com/luozi-csu/lzblogs/controller"
 	"github.com/luozi-csu/lzblogs/database"
@@ -48,15 +50,20 @@ func New(conf *config.Config) (*Server, error) {
 		}
 	}
 
+	// oauth manager
+	oauthManager := oauth.NewOAuthManager(&conf.OAuth)
+
 	// services
 	userService := service.NewUserService(repository.User())
 	rbacService := service.NewRBACService(repository.RBAC())
+	jwtService := authentication.NewJWTService(conf.Server.JWTSecret)
 
 	// controllers
 	userController := controller.NewUserController(userService)
 	rbacController := controller.NewRBACController(rbacService)
+	authController := controller.NewAuthController(userService, jwtService, oauthManager)
 
-	s.controllers = append(s.controllers, userController, rbacController)
+	s.controllers = append(s.controllers, userController, rbacController, authController)
 
 	s.engine.Use(
 		gin.Recovery(),

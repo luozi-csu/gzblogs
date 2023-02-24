@@ -1,15 +1,19 @@
 package oauth
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/luozi-csu/lzblogs/config"
+	"github.com/luozi-csu/lzblogs/model"
 	"golang.org/x/oauth2"
 )
 
 const (
-	GithubAuthType string = "github"
+	GithubAuthType = "github"
+	EmptyAuthType  = ""
 )
 
 type OAuthClient interface {
@@ -30,11 +34,43 @@ var (
 )
 
 type UserInfo struct {
-	ID          int
+	ID          string
 	Url         string
 	AuthType    string
 	Username    string
 	DisplayName string
 	Email       string
 	AvatarUrl   string
+}
+
+func (ui *UserInfo) GetUser() *model.User {
+	return &model.User{
+		Name:   ui.Username,
+		Email:  ui.Email,
+		Avatar: ui.AvatarUrl,
+		AuthInfos: []model.AuthInfo{
+			{
+				AuthType: ui.AuthType,
+				AuthID:   ui.ID,
+				Url:      ui.Url,
+			},
+		},
+	}
+}
+
+type OAuthManager struct {
+	conf *config.OAuthConfig
+}
+
+func NewOAuthManager(conf *config.OAuthConfig) *OAuthManager {
+	return &OAuthManager{conf: conf}
+}
+
+func (om *OAuthManager) GetOAuthClient(authType string) (OAuthClient, error) {
+	switch authType {
+	case GithubAuthType:
+		return NewGithubAuth(om.conf.Github.ClientID, om.conf.Github.ClientSecret), nil
+	}
+
+	return nil, fmt.Errorf("unknown auth type=%s", authType)
 }

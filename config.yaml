@@ -5,6 +5,7 @@ server:
     level: debug
     path: "log/lzblogs"
   rbacModelConf: "./model.conf"
+  jwtSecret: "lzblogsjwtsecret"
 
 database:
   host: "127.0.0.1"
@@ -13,3 +14,8 @@ database:
   user: "luozi"
   password: "123456"
   migrate: true
+
+oauth:
+  github:
+    clientID: "8dff55d10fdfd78b3432"
+    clientSecret: "a9e8f8caca901f4194a977c9426d52cc6802ded3"

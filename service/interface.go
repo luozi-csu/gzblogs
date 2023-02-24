@@ -7,8 +7,10 @@ import (
 type UserService interface {
 	Get(string) (*model.User, error)
 	List() (model.Users, error)
-	Create(*model.CreateUserInput) (*model.User, error)
-	Update(string, *model.UpdateUserInput) (*model.User, error)
+	Create(*model.User) (*model.User, error)
+	CreateOAuthUser(*model.User) (*model.User, error)
+	Auth(*model.AuthUser) (*model.User, error)
+	Update(string, *model.User) (*model.User, error)
 	Delete(string) error
 }
 

@@ -2,12 +2,11 @@ package repository
 
 import (
 	"github.com/luozi-csu/lzblogs/model"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 var (
-	userCreateField = []string{"name", "password"}
+	userCreateField = []string{"name", "password", "email", "avatar", "AuthInfos"}
 )
 
 type userRepository struct {
@@ -22,7 +21,7 @@ func newUserRepository(db *gorm.DB) UserRepository {
 
 func (u *userRepository) GetUserByID(id uint) (*model.User, error) {
 	user := new(model.User)
-	if err := u.db.Omit("Password").Preload("Roles").First(user, id).Error; err != nil {
+	if err := u.db.Omit("Password").Preload("AuthInfos").First(user, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -31,16 +30,25 @@ func (u *userRepository) GetUserByID(id uint) (*model.User, error) {
 
 func (u *userRepository) GetUserByName(name string) (*model.User, error) {
 	user := new(model.User)
-	if err := u.db.Omit("Password").Preload("Roles").Where("name = ?", name).First(user).Error; err != nil {
+	if err := u.db.Preload("AuthInfos").Where("name = ?", name).First(user).Error; err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
+func (u *userRepository) GetUserByAuthID(authType, authID string) (*model.User, error) {
+	authInfo := new(model.AuthInfo)
+	if err := u.db.Where("auth_type = ? and auth_id = ?", authType, authID).First(authInfo).Error; err != nil {
+		return nil, err
+	}
+
+	return u.GetUserByID(authInfo.UserID)
+}
+
 func (u *userRepository) List() (model.Users, error) {
 	users := make(model.Users, 0)
-	if err := u.db.Omit("Password").Preload("Roles").Order("name").Find(&users).Error; err != nil {
+	if err := u.db.Omit("Password").Preload("AuthInfos").Order("name").Find(&users).Error; err != nil {
 		return nil, err
 	}
 
@@ -56,10 +64,6 @@ func (u *userRepository) Create(user *model.User) (*model.User, error) {
 }
 
 func (u *userRepository) Update(user *model.User) (*model.User, error) {
-	if user == nil {
-		return nil, errors.New("empty user")
-	}
-
 	if err := u.db.Model(&model.User{}).Where("id = ?", user.ID).Updates(user).Error; err != nil {
 		return nil, err
 	}
@@ -76,5 +80,5 @@ func (u *userRepository) Delete(user *model.User) error {
 }
 
 func (u *userRepository) Migrate() error {
-	return u.db.AutoMigrate(&model.User{})
+	return u.db.AutoMigrate(&model.User{}, &model.AuthInfo{})
 }

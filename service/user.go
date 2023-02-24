@@ -8,6 +8,7 @@ import (
 	"github.com/luozi-csu/lzblogs/repository"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 const (
@@ -32,33 +33,66 @@ func (u *userService) List() (model.Users, error) {
 	return u.userRepository.List()
 }
 
-func (u *userService) Create(input *model.CreateUserInput) (*model.User, error) {
-	if input == nil {
-		return nil, errors.New("empty user input")
+func (u *userService) Create(user *model.User) (*model.User, error) {
+	if err := u.validateUser(user); err != nil {
+		return nil, err
 	}
-	if input.Name == "" {
-		return nil, errors.New("empty user name")
-	}
-	if len(input.Password) < MinPasswordLength {
-		return nil, fmt.Errorf("password length must great than %d", MinPasswordLength)
-	}
+
 	// 使用bcrypt加密
-	pwd, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	pwd, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.Wrap(err, "encryption failed")
 	}
-	input.Password = string(pwd)
-	return u.userRepository.Create(input.GetUser())
+	user.Password = string(pwd)
+	return u.userRepository.Create(user)
 }
 
-func (u *userService) Update(id string, new *model.UpdateUserInput) (*model.User, error) {
+func (u *userService) CreateOAuthUser(user *model.User) (*model.User, error) {
+	if err := u.validateUser(user); err != nil {
+		return nil, err
+	}
+
+	if len(user.AuthInfos) == 0 {
+		return nil, errors.New("empty auth infos")
+	}
+
+	authInfo := user.AuthInfos[0]
+	old, err := u.userRepository.GetUserByAuthID(authInfo.AuthType, authInfo.AuthID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return u.userRepository.Create(user)
+		}
+		return nil, err
+	}
+
+	return old, nil
+}
+
+func (u *userService) Auth(authUser *model.AuthUser) (*model.User, error) {
+	if authUser == nil || authUser.Name == "" || authUser.Password == "" {
+		return nil, errors.New("empty value in name, password")
+	}
+
+	user, err := u.userRepository.GetUserByName(authUser.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(authUser.Password)); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *userService) Update(id string, new *model.User) (*model.User, error) {
 	old, err := u.getUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	if new == nil {
-		return nil, errors.New("emtpy user input")
+		return nil, errors.New("emtpy user")
 	}
 
 	if new.ID != 0 && old.ID != new.ID {
@@ -66,7 +100,15 @@ func (u *userService) Update(id string, new *model.UpdateUserInput) (*model.User
 	}
 	new.ID = old.ID
 
-	return u.userRepository.Update(new.GetUser())
+	if len(new.Password) > 0 {
+		pwd, err := bcrypt.GenerateFromPassword([]byte(new.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, errors.Wrap(err, "encryption failed")
+		}
+		new.Password = string(pwd)
+	}
+
+	return u.userRepository.Update(new)
 }
 
 func (u *userService) Delete(id string) error {
@@ -92,4 +134,17 @@ func (u *userService) getUser(id string) (*model.User, error) {
 		return nil, errors.Wrapf(err, "convert uid=%s from string to int failed", id)
 	}
 	return &model.User{ID: uint(uid)}, nil
+}
+
+func (u *userService) validateUser(user *model.User) error {
+	if user == nil {
+		return errors.New("empty user")
+	}
+	if user.Name == "" {
+		return errors.New("empty username")
+	}
+	if len(user.Password) < MinPasswordLength {
+		return errors.New("password length is less than 6")
+	}
+	return nil
 }

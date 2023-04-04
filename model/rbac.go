@@ -15,9 +15,12 @@ type CasbinRule struct {
 type Operation string
 
 var (
-	AllOperation   Operation = "*"
-	ReadOperation  Operation = "read"
-	WriteOperation Operation = "write"
+	AllOperation    Operation = "*"
+	GetOperation    Operation = "get"
+	CreateOperation Operation = "post"
+	UpdateOperation Operation = "put"
+	RemoveOperation Operation = "delete"
+	ListOperation   Operation = "list"
 )
 
 // casbin策略
@@ -49,4 +52,9 @@ type CreatePoliciesInput struct {
 
 type CreateRolesInput struct {
 	Roles []Role `json:"roles"`
+}
+
+type Resource struct {
+	Name string `json:"name"`
+	Kind string `json:"kind"`
 }

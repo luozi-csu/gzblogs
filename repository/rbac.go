@@ -162,6 +162,18 @@ func (rbac *rbacRepository) RemoveRole(role *model.Role) error {
 	return nil
 }
 
+func (rbac *rbacRepository) HasPermission(user *model.User, permission ...string) (bool, error) {
+	if user == nil || len(permission) == 0 {
+		return false, errors.New("empty user or permission")
+	}
+
+	if user.Name == "" {
+		return false, errors.New("empty username")
+	}
+
+	return rbac.enforcer.HasPermissionForUser(user.Name, permission...), nil
+}
+
 func convertPolicyToSlice(policy *model.Policy) []interface{} {
 	if policy == nil {
 		return nil

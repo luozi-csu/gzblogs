@@ -41,4 +41,5 @@ type RBACRepository interface {
 	UpdateRole(old, new *model.Role) (*model.Role, error)
 	RemovePolicy(*model.Policy) error
 	RemoveRole(*model.Role) error
+	HasPermission(*model.User, ...string) (bool, error)
 }
